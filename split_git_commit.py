@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import argparse
 import difflib
 import os
 from dataclasses import dataclass, field
-from typing import Generator, Optional, Sequence
+from typing import Generator, Sequence
 
 from git import Commit, Diff, Head, Repo
 
@@ -20,26 +22,27 @@ CHANGE_TYPES = {
 
 SUPPORTED_CHANGE_TYPES = {"A", "M"}
 
-DEFAULT_DESIRED_MAX_LINE_CHANGES = 500
+DEFAULT_DESIRED_LINE_CHANGES = 400
 
 
 @dataclass(frozen=True)
 class ChangedFile:
     path: str
     lines: list[str] = field(repr=False)
-    n_lines_added: int
-    n_lines_deleted: int
-
-    @property
-    def n_lines_changed(self) -> int:
-        return self.n_lines_added + self.n_lines_deleted
+    line_change_stats: LineChangeStats
 
 
 @dataclass(frozen=True)
 class LineChangeStats:
-    total: int
     added: int
     deleted: int
+
+    @property
+    def total(self) -> int:
+        return self.added + self.deleted
+
+    def __add__(self, other: LineChangeStats) -> LineChangeStats:
+        return LineChangeStats(self.added + other.added, self.deleted + other.deleted)
 
 
 def get_changed_files(base_commit: Commit, target_commit: Commit) -> list[ChangedFile]:
@@ -77,8 +80,7 @@ def get_changed_files(base_commit: Commit, target_commit: Commit) -> list[Change
             ChangedFile(
                 file_path,
                 new_file_lines,
-                n_lines_added,
-                n_lines_deleted,
+                LineChangeStats(n_lines_added, n_lines_deleted),
             ),
         )
 
@@ -86,24 +88,22 @@ def get_changed_files(base_commit: Commit, target_commit: Commit) -> list[Change
 
 
 def compute_change_stats(changed_files: list[ChangedFile]) -> LineChangeStats:
-    added, deleted = 0, 0
+    line_change_stats = LineChangeStats(0, 0)
     for cf in changed_files:
-        added += cf.n_lines_added
-        deleted += cf.n_lines_deleted
-
-    return LineChangeStats(added + deleted, added, deleted)
+        line_change_stats += cf.line_change_stats
+    return line_change_stats
 
 
 def split_changed_files(
     changed_files: list[ChangedFile],
-    desired_max_line_changes: int,
+    desired_line_changes: int,
 ) -> Generator[list[ChangedFile], None, None]:
     block: list[ChangedFile] = []
     block_line_changes = 0
 
     for cf in changed_files:
-        tentative_line_changes = block_line_changes + cf.n_lines_changed
-        if tentative_line_changes <= desired_max_line_changes:
+        tentative_line_changes = block_line_changes + cf.line_change_stats.total
+        if tentative_line_changes <= desired_line_changes:
             # Changed file fits in current block
             block.append(cf)
             block_line_changes = tentative_line_changes
@@ -112,7 +112,7 @@ def split_changed_files(
             if block:
                 yield block
                 block = [cf]
-                block_line_changes = cf.n_lines_changed
+                block_line_changes = cf.line_change_stats.total
             else:
                 yield [cf]
                 block = []
@@ -168,20 +168,20 @@ def create_split_branches(
     source_branch.checkout()
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("repo_dir", help="Path to the Git repository to work with")
     parser.add_argument(
         "-l",
-        "--desired-max-line-changes",
+        "--desired-line-changes",
         type=int,
-        default=DEFAULT_DESIRED_MAX_LINE_CHANGES,
-        help=f"Desired maximum line changes per split block (default: {DEFAULT_DESIRED_MAX_LINE_CHANGES}).",
+        default=DEFAULT_DESIRED_LINE_CHANGES,
+        help=f"Desired line changes per split block (default: {DEFAULT_DESIRED_LINE_CHANGES}).",
     )
     args = parser.parse_args()
 
     repo_dir = os.path.abspath(args.repo_dir)
-    desired_max_line_changes: int = args.desired_max_line_changes
+    desired_line_changes: int = args.desired_line_changes
 
     repo = Repo(repo_dir)
     print(f"Repository: {repo_dir}")
@@ -218,15 +218,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         f"(+{change_stats.added}, -{change_stats.deleted})"
     )
 
-    if change_stats.total <= desired_max_line_changes:
-        print(
-            f"Line changes do not exceed desired maximum line changes ({desired_max_line_changes}) "
-            "-- nothing to do here"
-        )
+    if change_stats.total <= desired_line_changes:
+        print(f"Line changes do not exceed desired line changes ({desired_line_changes}) -- nothing to do here")
         return 0
 
-    print(f"Splitting changes into parts with desired_max_line_changes={desired_max_line_changes}")
-    split_blocks = list(split_changed_files(changed_files, desired_max_line_changes))
+    print(f"Splitting changes into parts with desired_line_changes={desired_line_changes}")
+    split_blocks = list(split_changed_files(changed_files, desired_line_changes))
 
     print("Split breakdown:")
     for i, block in enumerate(split_blocks):
