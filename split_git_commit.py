@@ -22,6 +22,7 @@ CHANGE_TYPES = {
 
 SUPPORTED_CHANGE_TYPES = {"A", "M"}
 
+DEFAULT_MAX_FILE_CHANGES = 40
 DEFAULT_DESIRED_LINE_CHANGES = 400
 
 
@@ -96,26 +97,33 @@ def compute_change_stats(changed_files: list[ChangedFile]) -> LineChangeStats:
 
 def split_changed_files(
     changed_files: list[ChangedFile],
+    max_file_changes: int,
     desired_line_changes: int,
 ) -> Generator[list[ChangedFile], None, None]:
     block: list[ChangedFile] = []
+    block_file_changes = 0
     block_line_changes = 0
 
     for cf in changed_files:
+        tentative_file_changes = block_file_changes + 1
         tentative_line_changes = block_line_changes + cf.line_change_stats.total
-        if tentative_line_changes <= desired_line_changes:
+
+        if tentative_file_changes <= max_file_changes and tentative_line_changes <= desired_line_changes:
             # Changed file fits in current block
             block.append(cf)
+            block_file_changes = tentative_file_changes
             block_line_changes = tentative_line_changes
         else:
             # Changed file doesn't fit in current block
             if block:
                 yield block
                 block = [cf]
+                block_file_changes = 1
                 block_line_changes = cf.line_change_stats.total
             else:
                 yield [cf]
                 block = []
+                block_file_changes = 0
                 block_line_changes = 0
 
     if block:
@@ -170,7 +178,19 @@ def create_split_branches(
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("repo_dir", help="Path to the Git repository to work with")
+    parser.add_argument(
+        "repo_dir",
+        nargs="?",
+        default=".",
+        help="Path to the Git repository to work with (default: current working dir).",
+    )
+    parser.add_argument(
+        "-f",
+        "--max-file-changes",
+        type=int,
+        default=DEFAULT_MAX_FILE_CHANGES,
+        help=f"Maximum file changes per split block (default: {DEFAULT_MAX_FILE_CHANGES}).",
+    )
     parser.add_argument(
         "-l",
         "--desired-line-changes",
@@ -181,6 +201,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args()
 
     repo_dir = os.path.abspath(args.repo_dir)
+    max_file_changes: int = args.max_file_changes
     desired_line_changes: int = args.desired_line_changes
 
     repo = Repo(repo_dir)
@@ -218,12 +239,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         f"(+{change_stats.added}, -{change_stats.deleted})"
     )
 
-    if change_stats.total <= desired_line_changes:
-        print(f"Line changes do not exceed desired line changes ({desired_line_changes}) -- nothing to do here")
-        return 0
+    print("Splitting changes into parts...")
+    print(f"  Maximum file changes per split block: {max_file_changes}")
+    print(f"  Desired line changes per split block: {desired_line_changes}")
+    split_blocks = list(split_changed_files(changed_files, max_file_changes, desired_line_changes))
 
-    print(f"Splitting changes into parts with desired_line_changes={desired_line_changes}")
-    split_blocks = list(split_changed_files(changed_files, desired_line_changes))
+    if len(split_blocks) == 1:
+        print("Changes cannot be split into smaller parts -- aborting")
+        return 0
 
     print("Split breakdown:")
     for i, block in enumerate(split_blocks):
