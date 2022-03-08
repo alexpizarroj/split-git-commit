@@ -7,32 +7,31 @@ WIP
 ## Example run
 
 ```bash
-$ python3.9 -m split_git_commit --desired-max-line-changes 300 ~/code/my-big-repo
-Repository: /Users/alexpizarroj/code/my-big-repo
-Branch: my-branch-with-lots-of-changes
-Target commit: f5ab1a816c021e73a0560e0601516c76c7375a0a
-Base commit: 3054a169609a7f79fb528ea8a55d6ba100e7575a
+$ python3.9 -m pip install split_git_commit
+$ cd ~/code/django
+$ split-git-commit
+Repository: /home/alex/code/django
+Branch: apply-pyupgrade-over-django-3.2.12
+Target commit: 628e74c8caa349315ff126c732c9055c8ce324e5
+Base commit: 869f49bb08e283cd9cef5956e7328055bc0c939a
 Computing changes...
-  Detected 528 files changed with 3937 lines changed (+1943, -1994)
-Splitting changes into parts with desired_max_line_changes=300
+  Detected 375 files changed with 2507 lines changed (+1252, -1255)
+Splitting changes into parts...
+  Maximum file changes per split block: 40
+  Desired line changes per split block: 400
 Split breakdown:
-- Part 1/15. 80 files changed with 299 lines changed (+146, -153)
-- Part 2/15. 42 files changed with 300 lines changed (+147, -153)
-- Part 3/15. 41 files changed with 291 lines changed (+144, -147)
-- Part 4/15. 50 files changed with 291 lines changed (+143, -148)
-- Part 5/15. 83 files changed with 300 lines changed (+148, -152)
-- Part 6/15. 60 files changed with 298 lines changed (+145, -153)
-- Part 7/15. 24 files changed with 251 lines changed (+123, -128)
-- Part 8/15. 20 files changed with 293 lines changed (+146, -147)
-- Part 9/15. 8 files changed with 62 lines changed (+31, -31)
-- Part 10/15. 8 files changed with 268 lines changed (+134, -134)
-- Part 11/15. 30 files changed with 295 lines changed (+146, -149)
-- Part 12/15. 10 files changed with 220 lines changed (+108, -112)
-- Part 13/15. 17 files changed with 229 lines changed (+114, -115)
-- Part 14/15. 26 files changed with 297 lines changed (+147, -150)
-- Part 15/15. 29 files changed with 243 lines changed (+121, -122)
+- Part 1/10. 40 files changed with 216 lines changed (+108, -108)
+- Part 2/10. 40 files changed with 196 lines changed (+98, -98)
+- Part 3/10. 40 files changed with 200 lines changed (+100, -100)
+- Part 4/10. 35 files changed with 395 lines changed (+197, -198)
+- Part 5/10. 33 files changed with 400 lines changed (+200, -200)
+- Part 6/10. 40 files changed with 194 lines changed (+97, -97)
+- Part 7/10. 40 files changed with 332 lines changed (+166, -166)
+- Part 8/10. 40 files changed with 154 lines changed (+77, -77)
+- Part 9/10. 40 files changed with 267 lines changed (+133, -134)
+- Part 10/10. 27 files changed with 153 lines changed (+76, -77)
 Create split branches (y/N)?: y
-Creating split branch 'my-branch-with-lots-of-changes-part1'...
+Creating split branch 'apply-pyupgrade-over-django-3.2.12-part1'...
   Deleting pre-existing branch with the same name
   Creating new branch
   Checking out new branch
@@ -40,7 +39,7 @@ Creating split branch 'my-branch-with-lots-of-changes-part1'...
   Adding files to Git index
   Committing changes
   Done
-Creating split branch 'my-branch-with-lots-of-changes-part2'...
+Creating split branch 'apply-pyupgrade-over-django-3.2.12-part2'...
   Deleting pre-existing branch with the same name
   Creating new branch
   Checking out new branch
@@ -48,7 +47,7 @@ Creating split branch 'my-branch-with-lots-of-changes-part2'...
   Adding files to Git index
   Committing changes
   Done
-Creating split branch 'my-branch-with-lots-of-changes-part3'...
+Creating split branch 'apply-pyupgrade-over-django-3.2.12-part3'...
   Deleting pre-existing branch with the same name
   Creating new branch
   Checking out new branch
@@ -56,7 +55,7 @@ Creating split branch 'my-branch-with-lots-of-changes-part3'...
   Adding files to Git index
   Committing changes
   Done
-Creating split branch 'my-branch-with-lots-of-changes-part4'...
+Creating split branch 'apply-pyupgrade-over-django-3.2.12-part4'...
   Deleting pre-existing branch with the same name
   Creating new branch
   Checking out new branch
@@ -64,7 +63,7 @@ Creating split branch 'my-branch-with-lots-of-changes-part4'...
   Adding files to Git index
   Committing changes
   Done
-Creating split branch 'my-branch-with-lots-of-changes-part5'...
+Creating split branch 'apply-pyupgrade-over-django-3.2.12-part5'...
   Deleting pre-existing branch with the same name
   Creating new branch
   Checking out new branch
@@ -72,7 +71,7 @@ Creating split branch 'my-branch-with-lots-of-changes-part5'...
   Adding files to Git index
   Committing changes
   Done
-Creating split branch 'my-branch-with-lots-of-changes-part6'...
+Creating split branch 'apply-pyupgrade-over-django-3.2.12-part6'...
   Deleting pre-existing branch with the same name
   Creating new branch
   Checking out new branch
@@ -80,7 +79,7 @@ Creating split branch 'my-branch-with-lots-of-changes-part6'...
   Adding files to Git index
   Committing changes
   Done
-Creating split branch 'my-branch-with-lots-of-changes-part7'...
+Creating split branch 'apply-pyupgrade-over-django-3.2.12-part7'...
   Deleting pre-existing branch with the same name
   Creating new branch
   Checking out new branch
@@ -88,7 +87,7 @@ Creating split branch 'my-branch-with-lots-of-changes-part7'...
   Adding files to Git index
   Committing changes
   Done
-Creating split branch 'my-branch-with-lots-of-changes-part8'...
+Creating split branch 'apply-pyupgrade-over-django-3.2.12-part8'...
   Deleting pre-existing branch with the same name
   Creating new branch
   Checking out new branch
@@ -96,7 +95,7 @@ Creating split branch 'my-branch-with-lots-of-changes-part8'...
   Adding files to Git index
   Committing changes
   Done
-Creating split branch 'my-branch-with-lots-of-changes-part9'...
+Creating split branch 'apply-pyupgrade-over-django-3.2.12-part9'...
   Deleting pre-existing branch with the same name
   Creating new branch
   Checking out new branch
@@ -104,7 +103,7 @@ Creating split branch 'my-branch-with-lots-of-changes-part9'...
   Adding files to Git index
   Committing changes
   Done
-Creating split branch 'my-branch-with-lots-of-changes-part10'...
+Creating split branch 'apply-pyupgrade-over-django-3.2.12-part10'...
   Deleting pre-existing branch with the same name
   Creating new branch
   Checking out new branch
@@ -112,46 +111,6 @@ Creating split branch 'my-branch-with-lots-of-changes-part10'...
   Adding files to Git index
   Committing changes
   Done
-Creating split branch 'my-branch-with-lots-of-changes-part11'...
-  Deleting pre-existing branch with the same name
-  Creating new branch
-  Checking out new branch
-  Writing file changes
-  Adding files to Git index
-  Committing changes
-  Done
-Creating split branch 'my-branch-with-lots-of-changes-part12'...
-  Deleting pre-existing branch with the same name
-  Creating new branch
-  Checking out new branch
-  Writing file changes
-  Adding files to Git index
-  Committing changes
-  Done
-Creating split branch 'my-branch-with-lots-of-changes-part13'...
-  Deleting pre-existing branch with the same name
-  Creating new branch
-  Checking out new branch
-  Writing file changes
-  Adding files to Git index
-  Committing changes
-  Done
-Creating split branch 'my-branch-with-lots-of-changes-part14'...
-  Deleting pre-existing branch with the same name
-  Creating new branch
-  Checking out new branch
-  Writing file changes
-  Adding files to Git index
-  Committing changes
-  Done
-Creating split branch 'my-branch-with-lots-of-changes-part15'...
-  Deleting pre-existing branch with the same name
-  Creating new branch
-  Checking out new branch
-  Writing file changes
-  Adding files to Git index
-  Committing changes
-  Done
-Checking out original branch 'my-branch-with-lots-of-changes'
+Checking out original branch 'apply-pyupgrade-over-django-3.2.12'
 All done!
 ```
